@@ -4,6 +4,7 @@ import {
   validateAccessToken,
   findAccessByEmail,
   markTokenSent,
+  markTokenUsed,
 } from '../services/accessService.js';
 
 const router = express.Router();
@@ -17,10 +18,7 @@ router.post('/create-token', async (req, res) => {
     const { email, source = 'manual', orderId = null } = req.body;
 
     if (!email) {
-      return res.status(400).json({
-        ok: false,
-        message: 'E-mail é obrigatório.',
-      });
+      return res.status(400).json({ ok: false, message: 'E-mail é obrigatório.' });
     }
 
     const result = createAccessToken({ email, source, orderId });
@@ -32,17 +30,13 @@ router.post('/create-token', async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao criar token:', error);
-
-    return res.status(500).json({
-      ok: false,
-      message: 'Erro ao criar token.',
-      error: error.message,
-    });
+    return res.status(500).json({ ok: false, message: 'Erro ao criar token.', error: error.message });
   }
 });
 
 /**
  * GET /api/access/validate?token=...
+ * Valida o token — retorna reason: 'used' se já foi utilizado
  */
 router.get('/validate', async (req, res) => {
   try {
@@ -51,24 +45,54 @@ router.get('/validate', async (req, res) => {
     const result = validateAccessToken(token);
 
     if (!result.valid) {
-      return res.status(400).json({
-        ok: false,
-        ...result,
-      });
+      // Token já usado — resposta amigável para o frontend tratar
+      if (result.reason === 'used') {
+        return res.status(200).json({
+          ok: false,
+          reason: 'used',
+          email: result.email,
+          message: 'Este formulário já foi preenchido.',
+        });
+      }
+
+      return res.status(400).json({ ok: false, ...result });
+    }
+
+    return res.status(200).json({ ok: true, ...result });
+  } catch (error) {
+    console.error('Erro ao validar token:', error);
+    return res.status(500).json({ ok: false, message: 'Erro ao validar token.', error: error.message });
+  }
+});
+
+/**
+ * POST /api/access/mark-used
+ * Marca token como usado após envio do formulário
+ * Chamado pelo frontend quando o cliente finaliza o diagnóstico
+ */
+router.post('/mark-used', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ ok: false, message: 'Token é obrigatório.' });
+    }
+
+    const result = markTokenUsed(token);
+
+    if (!result) {
+      return res.status(404).json({ ok: false, message: 'Token não encontrado.' });
     }
 
     return res.status(200).json({
       ok: true,
-      ...result,
+      message: 'Token marcado como usado.',
+      email: result.email,
+      usedAt: result.usedAt,
     });
   } catch (error) {
-    console.error('Erro ao validar token:', error);
-
-    return res.status(500).json({
-      ok: false,
-      message: 'Erro ao validar token.',
-      error: error.message,
-    });
+    console.error('Erro ao marcar token como usado:', error);
+    return res.status(500).json({ ok: false, message: 'Erro ao marcar token.', error: error.message });
   }
 });
 
@@ -81,17 +105,10 @@ router.post('/manual-token', async (req, res) => {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({
-        ok: false,
-        message: 'E-mail é obrigatório.',
-      });
+      return res.status(400).json({ ok: false, message: 'E-mail é obrigatório.' });
     }
 
-    const result = createAccessToken({
-      email,
-      source: 'manual',
-      orderId: null,
-    });
+    const result = createAccessToken({ email, source: 'manual', orderId: null });
 
     return res.status(200).json({
       ok: true,
@@ -101,12 +118,7 @@ router.post('/manual-token', async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao criar token manual:', error);
-
-    return res.status(500).json({
-      ok: false,
-      message: 'Erro ao criar token manual.',
-      error: error.message,
-    });
+    return res.status(500).json({ ok: false, message: 'Erro ao criar token manual.', error: error.message });
   }
 });
 
@@ -119,10 +131,7 @@ router.post('/resend-link', async (req, res) => {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({
-        ok: false,
-        message: 'E-mail é obrigatório.',
-      });
+      return res.status(400).json({ ok: false, message: 'E-mail é obrigatório.' });
     }
 
     const access = findAccessByEmail(email);
@@ -139,21 +148,12 @@ router.post('/resend-link', async (req, res) => {
     return res.status(200).json({
       ok: true,
       message: 'Reenvio preparado com sucesso.',
-      access: {
-        email: access.email,
-        token: access.token,
-        source: access.source,
-      },
+      access: { email: access.email, token: access.token, source: access.source },
       accessLink: `https://eizzimelgarejo.com/diagnostico360/?token=${access.token}`,
     });
   } catch (error) {
     console.error('Erro ao preparar reenvio:', error);
-
-    return res.status(500).json({
-      ok: false,
-      message: 'Erro ao preparar reenvio.',
-      error: error.message,
-    });
+    return res.status(500).json({ ok: false, message: 'Erro ao preparar reenvio.', error: error.message });
   }
 });
 
