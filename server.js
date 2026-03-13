@@ -13,7 +13,8 @@ app.use(
   cors({
     origin: [
       'http://localhost:5173',
-      'https://eizzimelgarejo.com'
+      'https://eizzimelgarejo.com',
+      'https://www.eizzimelgarejo.com',  // ← adicionar
     ],
     methods: ['GET', 'POST'],
     credentials: false,
