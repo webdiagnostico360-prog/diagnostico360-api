@@ -53,6 +53,7 @@ export function createAccessToken({ email, source = 'manual', orderId = null }) 
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     lastSentAt: null,
+    usedAt: null,        // ← quando o formulário foi concluído
   };
 
   if (existingIndex >= 0) {
@@ -61,6 +62,8 @@ export function createAccessToken({ email, source = 'manual', orderId = null }) 
       token,
       source,
       orderId,
+      status: 'active',  // reativa se estava usado
+      usedAt: null,
       updatedAt: new Date().toISOString(),
     };
   } else {
@@ -83,12 +86,24 @@ export function validateAccessToken(token) {
   }
 
   const tokens = readTokens();
-
-  const found = tokens.find(
-    (item) => item.token === token && item.status === 'active'
-  );
+  const found = tokens.find((item) => item.token === token);
 
   if (!found) {
+    return { valid: false, reason: 'Token inválido ou inativo.' };
+  }
+
+  // Token já usado — retorna motivo específico
+  if (found.status === 'used') {
+    return {
+      valid: false,
+      reason: 'used',
+      email: found.email,
+      usedAt: found.usedAt,
+    };
+  }
+
+  // Token inativo por outro motivo
+  if (found.status !== 'active') {
     return { valid: false, reason: 'Token inválido ou inativo.' };
   }
 
@@ -99,6 +114,25 @@ export function validateAccessToken(token) {
     orderId: found.orderId,
     createdAt: found.createdAt,
   };
+}
+
+/**
+ * Marca o token como usado após envio do formulário
+ */
+export function markTokenUsed(token) {
+  const tokens = readTokens();
+
+  const index = tokens.findIndex((item) => item.token === token);
+
+  if (index === -1) return null;
+
+  tokens[index].status    = 'used';
+  tokens[index].usedAt    = new Date().toISOString();
+  tokens[index].updatedAt = new Date().toISOString();
+
+  writeTokens(tokens);
+
+  return tokens[index];
 }
 
 export function findAccessByEmail(email) {
@@ -126,7 +160,7 @@ export function markTokenSent(email) {
   if (index === -1) return null;
 
   tokens[index].lastSentAt = new Date().toISOString();
-  tokens[index].updatedAt = new Date().toISOString();
+  tokens[index].updatedAt  = new Date().toISOString();
 
   writeTokens(tokens);
 
