@@ -31,6 +31,11 @@ export async function sendSubmissionEmail(submission) {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    // Força IPv4 — Railway usa IPv6 por padrão e a Hostinger não aceita
+    family: 4,
+    tls: {
+      rejectUnauthorized: false,
+    },
   });
 
   // Verifica conexão SMTP
