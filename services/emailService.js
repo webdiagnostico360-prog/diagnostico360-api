@@ -25,17 +25,18 @@ PDF: ${pdf?.fileName || '—'}
 export async function sendSubmissionEmail(submission) {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: String(process.env.SMTP_SECURE) === 'true',
+    port: 587,
+    secure: false, // STARTTLS — Railway bloqueia porta 465
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
-    // Força IPv4 — Railway usa IPv6 por padrão e a Hostinger não aceita
-    family: 4,
+    family: 4, // Força IPv4
     tls: {
       rejectUnauthorized: false,
+      ciphers: 'SSLv3',
     },
+    requireTLS: true,
   });
 
   // Verifica conexão SMTP
