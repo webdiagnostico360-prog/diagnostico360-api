@@ -6,6 +6,8 @@ import { sendSubmissionEmail } from '../services/emailService.js';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
+  const log = [];
+
   try {
     const { emailLogin, submittedAt, answers, questionMap } = req.body;
 
@@ -17,50 +19,54 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ ok: false, message: 'As respostas do formulário são obrigatórias.' });
     }
 
-    // Log mínimo — só e-mail e timestamp
-    console.log(`[submission] Recebido de: ${emailLogin} em ${new Date().toISOString()}`);
+    log.push(`STEP1:formatSubmission`);
+    let formatted;
+    try {
+      formatted = formatSubmission({ emailLogin, submittedAt, answers, questionMap });
+      log.push('STEP1:OK');
+    } catch (e) {
+      log.push(`STEP1:ERRO:${e.message}`);
+      throw e;
+    }
 
-    const formatted = formatSubmission({ emailLogin, submittedAt, answers, questionMap });
-
-    console.log('[submission] Gerando PDF...');
+    log.push('STEP2:generatePdf');
     let pdfResult;
     try {
       pdfResult = await generatePdf(formatted);
-      console.log('[submission] PDF gerado:', pdfResult.fileName);
-    } catch (pdfError) {
-      console.error('[submission] ERRO no PDF:', pdfError.message);
-      throw pdfError;
+      log.push(`STEP2:OK:${pdfResult.fileName}`);
+    } catch (e) {
+      log.push(`STEP2:ERRO:${e.message}`);
+      throw e;
     }
 
-    const submissionWithPdf = { ...formatted, pdf: pdfResult };
-
-    console.log('[submission] Enviando e-mails...');
+    log.push('STEP3:sendEmail');
     let emailResult;
     try {
-      emailResult = await sendSubmissionEmail(submissionWithPdf);
-      console.log('[submission] E-mails enviados:', JSON.stringify(emailResult));
-    } catch (emailError) {
-      console.error('[submission] ERRO no e-mail:', emailError.message);
-      throw emailError;
+      emailResult = await sendSubmissionEmail({ ...formatted, pdf: pdfResult });
+      log.push('STEP3:OK');
+    } catch (e) {
+      log.push(`STEP3:ERRO:${e.message}`);
+      throw e;
     }
 
-    console.log('[submission] Concluído com sucesso!');
+    console.log('[OK]', log.join('|'));
 
     return res.status(200).json({
       ok: true,
       message: 'Submissão recebida com sucesso.',
-      submission: { emailLogin: formatted.emailLogin, submittedAt: formatted.submittedAt },
       pdf: { ok: pdfResult.ok, fileName: pdfResult.fileName },
       email: emailResult,
     });
+
   } catch (error) {
-    console.error('[submission] ERRO GERAL:', error.message);
-    console.error('[submission] STACK:', error.stack?.split('\n').slice(0, 3).join(' | '));
+    console.error('[FALHA]', log.join('|'));
+    console.error('[ERRO]', error.message);
 
     return res.status(500).json({
       ok: false,
       message: 'Erro ao processar submissão.',
       error: error.message,
+      steps: log,
     });
   }
 });
