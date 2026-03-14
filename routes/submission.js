@@ -10,53 +10,52 @@ router.post('/', async (req, res) => {
     const { emailLogin, submittedAt, answers, questionMap } = req.body;
 
     if (!emailLogin || typeof emailLogin !== 'string') {
-      return res.status(400).json({
-        ok: false,
-        message: 'E-mail do usuário é obrigatório.',
-      });
+      return res.status(400).json({ ok: false, message: 'E-mail do usuário é obrigatório.' });
     }
 
     if (!answers || typeof answers !== 'object') {
-      return res.status(400).json({
-        ok: false,
-        message: 'As respostas do formulário são obrigatórias.',
-      });
+      return res.status(400).json({ ok: false, message: 'As respostas do formulário são obrigatórias.' });
     }
 
-    const formatted = formatSubmission({
-      emailLogin,
-      submittedAt,
-      answers,
-      questionMap,
-    });
+    // Log mínimo — só e-mail e timestamp
+    console.log(`[submission] Recebido de: ${emailLogin} em ${new Date().toISOString()}`);
 
-    console.log('=== NOVA SUBMISSÃO RECEBIDA ===');
-    console.log(JSON.stringify(formatted, null, 2));
+    const formatted = formatSubmission({ emailLogin, submittedAt, answers, questionMap });
 
-    const pdfResult = await generatePdf(formatted);
+    console.log('[submission] Gerando PDF...');
+    let pdfResult;
+    try {
+      pdfResult = await generatePdf(formatted);
+      console.log('[submission] PDF gerado:', pdfResult.fileName);
+    } catch (pdfError) {
+      console.error('[submission] ERRO no PDF:', pdfError.message);
+      throw pdfError;
+    }
 
-    console.log('=== PDF GERADO ===');
-    console.log(pdfResult);
+    const submissionWithPdf = { ...formatted, pdf: pdfResult };
 
-    const submissionWithPdf = {
-      ...formatted,
-      pdf: pdfResult,
-    };
+    console.log('[submission] Enviando e-mails...');
+    let emailResult;
+    try {
+      emailResult = await sendSubmissionEmail(submissionWithPdf);
+      console.log('[submission] E-mails enviados:', JSON.stringify(emailResult));
+    } catch (emailError) {
+      console.error('[submission] ERRO no e-mail:', emailError.message);
+      throw emailError;
+    }
 
-    const emailResult = await sendSubmissionEmail(submissionWithPdf);
-
-    console.log('=== E-MAIL ENVIADO ===');
-    console.log(emailResult);
+    console.log('[submission] Concluído com sucesso!');
 
     return res.status(200).json({
       ok: true,
       message: 'Submissão recebida com sucesso.',
-      submission: formatted,
-      pdf: pdfResult,
+      submission: { emailLogin: formatted.emailLogin, submittedAt: formatted.submittedAt },
+      pdf: { ok: pdfResult.ok, fileName: pdfResult.fileName },
       email: emailResult,
     });
   } catch (error) {
-    console.error('Erro ao processar submissão:', error);
+    console.error('[submission] ERRO GERAL:', error.message);
+    console.error('[submission] STACK:', error.stack?.split('\n').slice(0, 3).join(' | '));
 
     return res.status(500).json({
       ok: false,
