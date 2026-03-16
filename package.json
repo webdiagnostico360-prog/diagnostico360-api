@@ -15,5 +15,6 @@
     "nodemailer": "^8.0.2",
     "puppeteer": "^24.39.0"
     "_buildId": "2"
+    "resend": "^3.2.0"
   }
 }
