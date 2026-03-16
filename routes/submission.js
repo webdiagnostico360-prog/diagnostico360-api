@@ -1,6 +1,7 @@
 import express from 'express';
 import { formatSubmission } from '../utils/formatSubmission.js';
 import { generatePdf } from '../services/pdfService.js';
+import { sendSubmissionEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -23,12 +24,12 @@ router.post('/', async (req, res) => {
       console.error('[sub] pdf erro:', e.message);
     }
 
-    // EMAIL TEMPORARIAMENTE DESATIVADO — será reativado após corrigir SMTP
-    // try {
-    //   await sendSubmissionEmail({ ...formatted, pdf: pdfResult });
-    // } catch (e) {
-    //   console.error('[sub] email erro:', e.message);
-    // }
+    try {
+      await sendSubmissionEmail({ ...formatted, pdf: pdfResult });
+      console.log('[sub] email ok');
+    } catch (e) {
+      console.error('[sub] email erro (nao bloqueia):', e.message);
+    }
 
     console.log('[sub] sucesso!');
     return res.status(200).json({ ok: true, message: 'Submissao recebida com sucesso.' });
