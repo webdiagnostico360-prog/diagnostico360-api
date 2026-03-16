@@ -6,8 +6,6 @@ import { sendSubmissionEmail } from '../services/emailService.js';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  const log = [];
-
   try {
     const { emailLogin, submittedAt, answers, questionMap } = req.body;
 
@@ -19,54 +17,49 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ ok: false, message: 'As respostas do formulário são obrigatórias.' });
     }
 
-    log.push(`STEP1:formatSubmission`);
-    let formatted;
-    try {
-      formatted = formatSubmission({ emailLogin, submittedAt, answers, questionMap });
-      log.push('STEP1:OK');
-    } catch (e) {
-      log.push(`STEP1:ERRO:${e.message}`);
-      throw e;
-    }
+    console.log(`[submission] Recebido de: ${emailLogin}`);
 
-    log.push('STEP2:generatePdf');
-    let pdfResult;
+    // STEP 1 — Formata
+    const formatted = formatSubmission({ emailLogin, submittedAt, answers, questionMap });
+
+    // STEP 2 — Gera PDF
+    let pdfResult = null;
     try {
       pdfResult = await generatePdf(formatted);
-      log.push(`STEP2:OK:${pdfResult.fileName}`);
-    } catch (e) {
-      log.push(`STEP2:ERRO:${e.message}`);
-      throw e;
+      console.log(`[submission] PDF gerado: ${pdfResult.fileName}`);
+    } catch (pdfError) {
+      console.error('[submission] ERRO PDF:', pdfError.message);
+      // PDF falhou mas não bloqueia
     }
 
-    log.push('STEP3:sendEmail');
-    let emailResult;
+    // STEP 3 — Envia e-mail (não bloqueia em caso de erro)
+    let emailResult = null;
+    let emailError = null;
     try {
       emailResult = await sendSubmissionEmail({ ...formatted, pdf: pdfResult });
-      log.push('STEP3:OK');
-    } catch (e) {
-      log.push(`STEP3:ERRO:${e.message}`);
-      throw e;
+      console.log('[submission] E-mail enviado com sucesso');
+    } catch (emailErr) {
+      emailError = emailErr.message;
+      console.error('[submission] ERRO E-MAIL (não bloqueante):', emailErr.message);
     }
 
-    console.log('[OK]', log.join('|'));
+    console.log('[submission] Concluído com sucesso!');
 
+    // Retorna sucesso independente do e-mail
     return res.status(200).json({
       ok: true,
       message: 'Submissão recebida com sucesso.',
-      pdf: { ok: pdfResult.ok, fileName: pdfResult.fileName },
+      pdf: pdfResult ? { ok: true, fileName: pdfResult.fileName } : null,
       email: emailResult,
+      emailError,
     });
 
   } catch (error) {
-    console.error('[FALHA]', log.join('|'));
-    console.error('[ERRO]', error.message);
-
+    console.error('[submission] ERRO GERAL:', error.message);
     return res.status(500).json({
       ok: false,
       message: 'Erro ao processar submissão.',
       error: error.message,
-      steps: log,
     });
   }
 });
