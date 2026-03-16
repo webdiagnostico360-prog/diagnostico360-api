@@ -23,20 +23,20 @@ PDF: ${pdf?.fileName || '—'}
 }
 
 export async function sendSubmissionEmail(submission) {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
+ const transporter = nodemailer.createTransport({
+    host: 'smtp.hostinger.com',
     port: 587,
-    secure: false, // STARTTLS — Railway bloqueia porta 465
+    secure: false,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
-    family: 4, // Força IPv4
+    family: 4,
     tls: {
       rejectUnauthorized: false,
-      ciphers: 'SSLv3',
     },
     requireTLS: true,
+  });
   });
 
   // Verifica conexão SMTP
