@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "postgresql://postgres:skgTEBEwYJloRlTocHWRpEmBuOlFkuFC@maglev.proxy.rlwy.net:57964/railway"
 }
 
 model Diagnostico {
