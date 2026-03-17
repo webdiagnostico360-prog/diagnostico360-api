@@ -6,6 +6,9 @@ import accessRouter from './routes/access.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Chave de admin — hardcoded pois process.env não funciona no Railway
+const ADMIN_KEY = 'Eizzi360Admin@2026';
+
 app.use(
   cors({
     origin: [
@@ -20,6 +23,15 @@ app.use(
 
 app.use(express.json({ limit: '10mb' }));
 
+// Middleware de autenticação admin
+function adminAuth(req, res, next) {
+  const key = req.headers['x-admin-key'] || req.query.key;
+  if (key !== ADMIN_KEY) {
+    return res.status(401).json({ ok: false, message: 'Acesso não autorizado.' });
+  }
+  next();
+}
+
 app.get('/', (req, res) => {
   res.json({ ok: true, message: 'API Diagnóstico 360 online' });
 });
@@ -28,28 +40,22 @@ app.get('/health', (req, res) => {
   res.json({ ok: true, status: 'healthy', uptime: process.uptime(), timestamp: new Date().toISOString() });
 });
 
-app.get('/debug-env', (req, res) => {
-  res.json({
-    resend: process.env.RESEND_API_KEY?.substring(0, 10) || 'NAO ENCONTRADO',
-    node_env: process.env.NODE_ENV,
-    port: process.env.PORT,
-  });
-});
-
-app.get('/setup-db', async (req, res) => {
+// Rota admin protegida — lista diagnósticos
+app.get('/admin/diagnosticos', adminAuth, async (req, res) => {
   try {
-    const { execSync } = await import('child_process');
-    execSync('npx prisma db push --accept-data-loss', { stdio: 'pipe' });
-    res.json({ ok: true, message: 'Banco criado com sucesso!' });
+    const { listarDiagnosticos } = await import('./services/dbService.js');
+    const result = await listarDiagnosticos();
+    res.json(result);
   } catch (error) {
     res.json({ ok: false, error: error.message });
   }
 });
 
-app.get('/admin/diagnosticos', async (req, res) => {
+// Rota admin protegida — busca diagnóstico por ID
+app.get('/admin/diagnosticos/:id', adminAuth, async (req, res) => {
   try {
-    const { listarDiagnosticos } = await import('./services/dbService.js');
-    const result = await listarDiagnosticos();
+    const { buscarDiagnostico } = await import('./services/dbService.js');
+    const result = await buscarDiagnostico(req.params.id);
     res.json(result);
   } catch (error) {
     res.json({ ok: false, error: error.message });
