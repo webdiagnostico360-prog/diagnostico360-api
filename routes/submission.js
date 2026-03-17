@@ -20,12 +20,11 @@ router.post('/', async (req, res) => {
   let pdfResult = null;
   try {
     pdfResult = await generatePdf(formatted);
-    console.log('[sub] pdf ok:', pdfResult.fileName);
   } catch (e) {
     console.error('[sub] pdf erro:', e.message);
   }
 
-// Salva no Google Drive
+  // Salva no Google Drive
   let driveResult = null;
   if (pdfResult?.pdfBuffer) {
     try {
@@ -36,16 +35,11 @@ router.post('/', async (req, res) => {
   } else {
     driveResult = { ok: false, error: 'sem pdfBuffer' };
   }
-return res.status(200).json({
-    ok: true,
-    message: 'Submissao recebida com sucesso.',
-    drive: driveResult,
-  });
-  
+
   // Envia e-mails
+  let emailResult = null;
   try {
-    await sendSubmissionEmail({ ...formatted, pdf: pdfResult });
-    console.log('[sub] email ok');
+    emailResult = await sendSubmissionEmail({ ...formatted, pdf: pdfResult });
   } catch (e) {
     console.error('[sub] email erro:', e.message);
   }
@@ -53,6 +47,11 @@ return res.status(200).json({
   return res.status(200).json({
     ok: true,
     message: 'Submissao recebida com sucesso.',
+    debug: {
+      pdf: pdfResult ? { ok: true, fileName: pdfResult.fileName } : { ok: false },
+      drive: driveResult,
+      email: emailResult,
+    }
   });
 });
 
