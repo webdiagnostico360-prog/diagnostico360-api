@@ -33,7 +33,6 @@ app.get('/debug-env', (req, res) => {
     resend: process.env.RESEND_API_KEY?.substring(0, 10) || 'NAO ENCONTRADO',
     node_env: process.env.NODE_ENV,
     port: process.env.PORT,
-    email1: process.env.EMAIL_INTERNAL_1,
   });
 });
 
@@ -42,6 +41,16 @@ app.get('/setup-db', async (req, res) => {
     const { execSync } = await import('child_process');
     execSync('npx prisma db push --accept-data-loss', { stdio: 'pipe' });
     res.json({ ok: true, message: 'Banco criado com sucesso!' });
+  } catch (error) {
+    res.json({ ok: false, error: error.message });
+  }
+});
+
+app.get('/admin/diagnosticos', async (req, res) => {
+  try {
+    const { listarDiagnosticos } = await import('./services/dbService.js');
+    const result = await listarDiagnosticos();
+    res.json(result);
   } catch (error) {
     res.json({ ok: false, error: error.message });
   }
