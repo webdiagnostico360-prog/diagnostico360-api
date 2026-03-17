@@ -25,14 +25,16 @@ router.post('/', async (req, res) => {
     console.error('[sub] pdf erro:', e.message);
   }
 
-  // Salva no Google Drive
+ // Salva no Google Drive
   if (pdfResult?.pdfBuffer) {
     try {
       const driveResult = await uploadPdfToDrive(pdfResult.pdfBuffer, pdfResult.fileName);
-      console.log('[sub] drive ok:', driveResult.fileId);
+      console.log('[sub] drive resultado:', JSON.stringify(driveResult));
     } catch (e) {
       console.error('[sub] drive erro:', e.message);
     }
+  } else {
+    console.log('[sub] drive: sem pdfBuffer, pulando...');
   }
 
   // Envia e-mails
