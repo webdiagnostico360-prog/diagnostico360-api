@@ -9,7 +9,7 @@ export async function sendSubmissionEmail(submission) {
 
   const clientEmail = submission.answers?.email || submission.emailLogin;
   const clientName = submission.answers?.q1_nome_completo || 'cliente';
-  const from = 'Diagnostico 360 <noreplay@send.eizzimelgarejo.com>';
+  const from = 'Diagnostico 360 <noreplay@eizzimelgarejo.com>';
 
   const results = [];
 
