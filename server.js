@@ -4,6 +4,14 @@ import submissionRouter from './routes/submission.js';
 import accessRouter from './routes/access.js';
 
 const app = express();
+app.get('/debug-env', (req, res) => {
+  res.json({
+    resend: process.env.RESEND_API_KEY?.substring(0, 10) || 'NAO ENCONTRADO',
+    node_env: process.env.NODE_ENV,
+    port: process.env.PORT,
+    email1: process.env.EMAIL_INTERNAL_1,
+  });
+});
 const PORT = process.env.PORT || 3001;
 
 app.use(
