@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Diagnostico {
+  id          String   @id @default(cuid())
+  emailLogin  String
+  submittedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  nomeCompleto       String?
+  nomeEmpresarial    String?
+  cpf                String?
+  telefone           String?
+  cidadeEstado       String?
+  especialidade      String?
+  tipoAtendimento    String?
+  empresaConstituida String?
+  naturezaAtuacao    String?
+
+  answers  Json
+  pdfNome  String?
+
+  @@map("diagnosticos")
+}
