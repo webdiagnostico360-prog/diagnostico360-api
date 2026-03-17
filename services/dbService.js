@@ -1,7 +1,13 @@
 // services/dbService.js
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: 'postgresql://postgres:skgTEBEwYJloRlTocHWRpEmBuOlFkuFC@maglev.proxy.rlwy.net:57964/railway',
+    },
+  },
+});
 
 export async function salvarDiagnostico(submission) {
   try {
