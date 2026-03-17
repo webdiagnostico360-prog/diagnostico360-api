@@ -1,4 +1,4 @@
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_hVLUqZPX_PcULaQeCkbgfukF4Pub7oHfF';
 
 export async function sendSubmissionEmail(submission) {
   const internalRecipients = [
