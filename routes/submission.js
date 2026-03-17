@@ -24,18 +24,18 @@ router.post('/', async (req, res) => {
       console.error('[sub] pdf erro:', e.message);
     }
 
-    try {
-      await sendSubmissionEmail({ ...formatted, pdf: pdfResult });
-      console.log('[sub] email ok');
-    } catch (e) {
-      console.error('[sub] email erro (nao bloqueia):', e.message);
-    }
+    console.log('[sub] chamando emailService...');
+    console.log('[sub] sendSubmissionEmail tipo:', typeof sendSubmissionEmail);
+    
+    const emailResult = await sendSubmissionEmail({ ...formatted, pdf: pdfResult });
+    console.log('[sub] email resultado:', JSON.stringify(emailResult));
 
     console.log('[sub] sucesso!');
     return res.status(200).json({ ok: true, message: 'Submissao recebida com sucesso.' });
 
   } catch (error) {
     console.error('[sub] erro geral:', error.message);
+    console.error('[sub] stack:', error.stack);
     return res.status(500).json({ ok: false, message: 'Erro ao processar.', error: error.message });
   }
 });
