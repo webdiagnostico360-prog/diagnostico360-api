@@ -38,6 +38,18 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+app.get('/debug-env', (req, res) => {
+  res.json({
+    resend_key_present: !!process.env.RESEND_API_KEY,
+    resend_key_start: process.env.RESEND_API_KEY?.substring(0, 15),
+    email1: process.env.EMAIL_INTERNAL_1,
+  });
+});
+```
+
+Commit → aguarda Railway → acessa no navegador:
+```
+https://diagnostico360-api-production.up.railway.app/debug-env
 
 app.use('/api/submission', submissionRouter);
 app.use('/api/access', accessRouter);
