@@ -35,6 +35,20 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ ok: true, status: 'healthy', uptime: process.uptime(), timestamp: new Date().toISOString() });
 });
+app.get('/setup-db', async (req, res) => {
+  try {
+    const { execSync } = await import('child_process');
+    execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
+    res.json({ ok: true, message: 'Banco criado com sucesso!' });
+  } catch (error) {
+    res.json({ ok: false, error: error.message });
+  }
+});
+```
+
+Commit → aguarda Railway → acessa no navegador:
+```
+https://diagnostico360-api-production.up.railway.app/setup-db
 
 app.get('/debug-env', (req, res) => {
   res.json({
