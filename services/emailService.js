@@ -61,11 +61,10 @@ export async function sendSubmissionEmail(submission) {
             </td></tr>
           </table>
           <div style="background:#F0EBE3;border-left:4px solid #62430B;border-radius:0 8px 8px 0;padding:16px 20px;margin-bottom:24px;">
-            <p style="margin:0;color:#62430B;font-size:14px;">
-              📎 <strong>O PDF completo com todas as respostas segue em anexo.</strong><br>
-              <span style="color:#888;font-size:13px;">Arquivo: ${submission.pdf?.fileName || '—'}</span>
-            </p>
-          </div>
+  <p style="margin:0;color:#62430B;font-size:14px;">
+    📎 <strong>O formulário completo com todas as respostas do cliente segue em anexo neste e-mail.</strong>
+  </p>
+</div>
           <p style="color:#888;font-size:13px;margin:0;line-height:1.6;">
             Para responder ao cliente: <strong>${clientEmail || '—'}</strong>
           </p>
