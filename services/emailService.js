@@ -2,10 +2,10 @@ const RESEND_API_KEY = 're_JmybzZcN_9newC2yysqoSmB59F5dQuFxo';
 
 export async function sendSubmissionEmail(submission) {
   const internalRecipients = [
-    process.env.EMAIL_INTERNAL_1,
-    process.env.EMAIL_INTERNAL_2,
-    process.env.EMAIL_INTERNAL_3,
-  ].filter(Boolean);
+    'loocaw.tech@gmail.com',
+    'web.diagnostico360@gmail.com',
+    'contato@eizzimelgarejo.com',
+  ];
 
   const clientEmail = submission.answers?.email || submission.emailLogin;
   const clientName = submission.answers?.q1_nome_completo || 'cliente';
