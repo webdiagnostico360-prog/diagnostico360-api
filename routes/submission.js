@@ -3,6 +3,8 @@ import { formatSubmission } from '../utils/formatSubmission.js';
 import { generatePdf } from '../services/pdfService.js';
 import { sendSubmissionEmail } from '../services/emailService.js';
 
+console.log('=== SUBMISSION ROUTE CARREGADA ===');
+
 const router = express.Router();
 
 router.post('/', async (req, res) => {
