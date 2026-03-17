@@ -2,6 +2,7 @@ import express from 'express';
 import { formatSubmission } from '../utils/formatSubmission.js';
 import { generatePdf } from '../services/pdfService.js';
 import { sendSubmissionEmail } from '../services/emailService.js';
+import { salvarDiagnostico } from '../services/dbService.js';
 
 console.log('=== SUBMISSION ROUTE CARREGADA ===');
 
@@ -23,7 +24,14 @@ router.post('/', async (req, res) => {
     console.error('[sub] pdf erro:', e.message);
   }
 
-  // Envia e-mails com PDF anexado
+  // Salva no banco de dados
+  try {
+    await salvarDiagnostico({ ...formatted, pdf: pdfResult });
+  } catch (e) {
+    console.error('[sub] db erro:', e.message);
+  }
+
+  // Envia e-mails
   try {
     await sendSubmissionEmail({ ...formatted, pdf: pdfResult });
   } catch (e) {
