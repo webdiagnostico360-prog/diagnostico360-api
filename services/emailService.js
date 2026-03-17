@@ -1,43 +1,48 @@
-import express from 'express';
-import { formatSubmission } from '../utils/formatSubmission.js';
-import { generatePdf } from '../services/pdfService.js';
-import { sendSubmissionEmail } from '../services/emailService.js';
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-const router = express.Router();
+export async function sendSubmissionEmail(submission) {
+  console.log('[email] iniciando...');
 
-router.post('/', async (req, res) => {
-  try {
-    const { emailLogin, submittedAt, answers, questionMap } = req.body;
+  const internalRecipients = [
+    process.env.EMAIL_INTERNAL_1,
+    process.env.EMAIL_INTERNAL_2,
+    process.env.EMAIL_INTERNAL_3,
+  ].filter(Boolean);
 
-    if (!emailLogin) return res.status(400).json({ ok: false, message: 'E-mail obrigatorio.' });
-    if (!answers) return res.status(400).json({ ok: false, message: 'Respostas obrigatorias.' });
+  const clientEmail = submission.answers?.email || submission.emailLogin;
+  const clientName = submission.answers?.q1_nome_completo || 'cliente';
 
-    console.log('[sub] inicio:', emailLogin);
+  const from = 'Diagnostico 360 <noreplay@send.eizzimelgarejo.com>';
 
-    const formatted = formatSubmission({ emailLogin, submittedAt, answers, questionMap });
-
-    let pdfResult = null;
-    try {
-      pdfResult = await generatePdf(formatted);
-      console.log('[sub] pdf ok:', pdfResult.fileName);
-    } catch (e) {
-      console.error('[sub] pdf erro:', e.message);
-    }
-
-    console.log('[sub] chamando emailService...');
-    console.log('[sub] sendSubmissionEmail tipo:', typeof sendSubmissionEmail);
-    
-    const emailResult = await sendSubmissionEmail({ ...formatted, pdf: pdfResult });
-    console.log('[sub] email resultado:', JSON.stringify(emailResult));
-
-    console.log('[sub] sucesso!');
-    return res.status(200).json({ ok: true, message: 'Submissao recebida com sucesso.' });
-
-  } catch (error) {
-    console.error('[sub] erro geral:', error.message);
-    console.error('[sub] stack:', error.stack);
-    return res.status(500).json({ ok: false, message: 'Erro ao processar.', error: error.message });
+  if (internalRecipients.length) {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from,
+        to: internalRecipients,
+        subject: `Novo Diagnostico 360 - ${clientName}`,
+        html: `<h2>Novo Diagnostico 360</h2><p>Nome: ${clientName}</p><p>Email: ${clientEmail}</p>`,
+      }),
+    });
+    const d = await r.json();
+    console.log('[email] interno:', JSON.stringify(d));
   }
-});
 
-export default router;
+  if (clientEmail) {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from,
+        to: [clientEmail],
+        subject: 'Recebemos seu Diagnostico 360',
+        html: `<h2>Formulario recebido!</h2><p>Ola ${clientName}, recebemos seu formulario.</p>`,
+      }),
+    });
+    const d = await r.json();
+    console.log('[email] cliente:', JSON.stringify(d));
+  }
+
+  return { ok: true };
+}
