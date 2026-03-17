@@ -60,4 +60,5 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`API Diagnóstico 360 rodando em http://localhost:${PORT}`);
+  console.log('=== VERSAO: ' + new Date().toISOString() + ' ===');
 });
