@@ -4,7 +4,9 @@ import dotenv from 'dotenv';
 import submissionRouter from './routes/submission.js';
 import accessRouter from './routes/access.js';
 
-dotenv.config();
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
