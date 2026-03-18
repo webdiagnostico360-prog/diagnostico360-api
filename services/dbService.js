@@ -1,4 +1,3 @@
-// services/dbService.js
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient({
@@ -13,29 +12,35 @@ export async function salvarDiagnostico(submission) {
   try {
     const { emailLogin, submittedAt, answers, pdf } = submission;
 
+    const pdfBase64 = pdf?.pdfBuffer
+      ? Buffer.isBuffer(pdf.pdfBuffer)
+        ? pdf.pdfBuffer.toString('base64')
+        : pdf.pdfBuffer
+      : null;
+
     const diagnostico = await prisma.diagnostico.create({
       data: {
-        emailLogin: emailLogin?.toLowerCase().trim(),
-        submittedAt: submittedAt ? new Date(submittedAt) : new Date(),
-        nomeCompleto:      answers?.q1_nome_completo      || null,
-        nomeEmpresarial:   answers?.q2_nome_empresarial   || null,
-        cpf:               answers?.q3_cpf                || null,
-        telefone:          answers?.q5_telefone           || null,
-        cidadeEstado:      answers?.q7_cidade_estado      || null,
-        especialidade:     answers?.q12_especialidade     || null,
-        tipoAtendimento:   answers?.q16_tipo_atendimento  || null,
-        empresaConstituida:answers?.q20_empresa_constituida || null,
-        naturezaAtuacao:   answers?.q21_natureza_atuacao  || null,
-        answers:           answers || {},
-        pdfNome:           pdf?.fileName || null,
+        emailLogin:         emailLogin?.toLowerCase().trim(),
+        submittedAt:        submittedAt ? new Date(submittedAt) : new Date(),
+        nomeCompleto:       answers?.q1_nome_completo       || null,
+        nomeEmpresarial:    answers?.q2_nome_empresarial    || null,
+        cpf:                answers?.q3_cpf                 || null,
+        telefone:           answers?.q5_telefone            || null,
+        cidadeEstado:       answers?.q7_cidade_estado       || null,
+        especialidade:      answers?.q12_especialidade      || null,
+        tipoAtendimento:    answers?.q16_tipo_atendimento   || null,
+        empresaConstituida: answers?.q20_empresa_constituida || null,
+        naturezaAtuacao:    answers?.q21_natureza_atuacao   || null,
+        answers:            answers || {},
+        pdfNome:            pdf?.fileName  || null,
+        pdfBase64:          pdfBase64,
       },
     });
 
-    console.log('[db] diagnostico salvo:', diagnostico.id);
+    console.log('[db] salvo:', diagnostico.id);
     return { ok: true, id: diagnostico.id };
-
   } catch (error) {
-    console.error('[db] erro ao salvar:', error.message);
+    console.error('[db] erro:', error.message);
     return { ok: false, error: error.message };
   }
 }
@@ -51,14 +56,18 @@ export async function listarDiagnosticos() {
         especialidade: true,
         cidadeEstado: true,
         telefone: true,
+        cpf: true,
+        tipoAtendimento: true,
+        empresaConstituida: true,
         submittedAt: true,
         createdAt: true,
         pdfNome: true,
+        pdfBase64: true,
       },
     });
     return { ok: true, diagnosticos };
   } catch (error) {
-    console.error('[db] erro ao listar:', error.message);
+    console.error('[db] erro listar:', error.message);
     return { ok: false, error: error.message };
   }
 }
@@ -69,7 +78,6 @@ export async function buscarDiagnostico(id) {
     if (!diagnostico) return { ok: false, error: 'Não encontrado' };
     return { ok: true, diagnostico };
   } catch (error) {
-    console.error('[db] erro ao buscar:', error.message);
     return { ok: false, error: error.message };
   }
 }
