@@ -23,8 +23,14 @@ model Diagnostico {
   empresaConstituida String?
   naturezaAtuacao    String?
 
-  answers  Json
-  pdfNome  String?
+  answers   Json
+  pdfNome   String?
+  pdfBase64 String?
 
   @@map("diagnosticos")
 }
+```
+
+Commit → aguarda Railway → acessa:
+```
+https://diagnostico360-api-production.up.railway.app/setup-db?key=Eizzi360Admin@2026
