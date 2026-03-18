@@ -81,3 +81,13 @@ export async function buscarDiagnostico(id) {
     return { ok: false, error: error.message };
   }
 }
+
+export async function deletarDiagnostico(id) {
+  try {
+    await prisma.diagnostico.delete({ where: { id } });
+    return { ok: true };
+  } catch (error) {
+    console.error('[db] erro ao deletar:', error.message);
+    return { ok: false, error: error.message };
+  }
+}
