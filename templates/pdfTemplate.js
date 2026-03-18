@@ -43,6 +43,20 @@ export function buildPdfHtml(submission) {
     { title: '14. Avaliação final e autopercepção do cliente', min: 216, max: 224 },
   ];
 
+  // Formata data no fuso horário de Brasília
+  function formatarDataBrasilia(dataStr) {
+    if (!dataStr) return '—';
+    try {
+      return new Date(dataStr).toLocaleString('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+        timeZone: 'America/Sao_Paulo',
+      });
+    } catch (e) {
+      return dataStr;
+    }
+  }
+
   function formatValue(value) {
     if (value === undefined || value === null || value === '') return '—';
     if (Array.isArray(value)) return value.join(', ');
@@ -77,19 +91,15 @@ export function buildPdfHtml(submission) {
   }
 
   const mainDataHtml = mainData
-    .map(
-      ([label, value]) => `
+    .map(([label, value]) => `
         <div class="summary-item">
           <div class="summary-label">${label}</div>
           <div class="summary-value">${formatValue(value)}</div>
         </div>
-      `
-    )
-    .join('');
+      `).join('');
 
   const sectionsHtml = groupedSections
-    .map(
-      (section) => `
+    .map((section) => `
         <section class="section">
           <h2>${section.title}</h2>
           <table>
@@ -104,9 +114,7 @@ export function buildPdfHtml(submission) {
             </tbody>
           </table>
         </section>
-      `
-    )
-    .join('');
+      `).join('');
 
   return `
   <!DOCTYPE html>
@@ -122,182 +130,47 @@ export function buildPdfHtml(submission) {
           padding: 0;
           background: #ffffff;
         }
-
         .cover {
           padding: 70px 44px 50px;
           border-bottom: 6px solid #BE964D;
         }
-
-        .logo-wrap {
-          margin-bottom: 24px;
-        }
-
-        .logo-img {
-          max-width: 180px;
-          max-height: 70px;
-          object-fit: contain;
-        }
-
-        .logo-text {
-          font-size: 14px;
-          font-weight: bold;
-          color: #62430B;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-        }
-
-        .title {
-          font-size: 30px;
-          font-weight: 700;
-          color: #1c1c1c;
-          margin-bottom: 10px;
-        }
-
-        .subtitle {
-          font-size: 16px;
-          color: #6B6B6B;
-          margin-bottom: 36px;
-          line-height: 1.6;
-        }
-
-        .meta {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 18px;
-          margin-top: 30px;
-        }
-
-        .meta-box {
-          background: #faf7f1;
-          border: 1px solid #e2c48d;
-          border-radius: 10px;
-          padding: 16px;
-        }
-
-        .meta-label {
-          font-size: 12px;
-          text-transform: uppercase;
-          color: #765d35;
-          margin-bottom: 6px;
-          font-weight: 700;
-        }
-
-        .meta-value {
-          font-size: 15px;
-          color: #1c1c1c;
-        }
-
-        .summary {
-          padding: 28px 44px 8px;
-        }
-
-        .summary h2,
-        .section h2 {
-          font-size: 20px;
-          color: #62430B;
-          margin-bottom: 18px;
-        }
-
-        .summary-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 14px;
-        }
-
-        .summary-item {
-          border: 1px solid #ece5d8;
-          border-radius: 10px;
-          padding: 12px 14px;
-          background: #fffdf9;
-        }
-
-        .summary-label {
-          font-size: 12px;
-          color: #765d35;
-          text-transform: uppercase;
-          font-weight: 700;
-          margin-bottom: 4px;
-        }
-
-        .summary-value {
-          font-size: 14px;
-          color: #1c1c1c;
-          line-height: 1.5;
-        }
-
-        .section {
-          padding: 12px 44px 6px;
-          page-break-inside: avoid;
-        }
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 24px;
-          table-layout: fixed;
-        }
-
-        thead th {
-          background: #62430B;
-          color: #ffffff;
-          font-size: 13px;
-          text-align: left;
-          padding: 12px;
-        }
-
-        tbody td {
-          border: 1px solid #e7e2d8;
-          padding: 10px 12px;
-          vertical-align: top;
-          font-size: 13px;
-          line-height: 1.55;
-        }
-
-        td.question {
-          width: 42%;
-          background: #faf7f1;
-          color: #62430B;
-          font-weight: 600;
-          word-break: break-word;
-        }
-
-        td.answer {
-          width: 58%;
-          color: #1c1c1c;
-          word-break: break-word;
-        }
-
-        td.empty {
-          text-align: center;
-          color: #6B6B6B;
-          padding: 16px;
-        }
-
-        .footer {
-          margin-top: 20px;
-          text-align: center;
-          font-size: 11px;
-          color: #777;
-          padding-bottom: 30px;
-        }
+        .logo-wrap { margin-bottom: 24px; }
+        .logo-img { max-width: 180px; max-height: 70px; object-fit: contain; }
+        .logo-text { font-size: 14px; font-weight: bold; color: #62430B; letter-spacing: 1px; text-transform: uppercase; }
+        .title { font-size: 30px; font-weight: 700; color: #1c1c1c; margin-bottom: 10px; }
+        .subtitle { font-size: 16px; color: #6B6B6B; margin-bottom: 36px; line-height: 1.6; }
+        .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 30px; }
+        .meta-box { background: #faf7f1; border: 1px solid #e2c48d; border-radius: 10px; padding: 16px; }
+        .meta-label { font-size: 12px; text-transform: uppercase; color: #765d35; margin-bottom: 6px; font-weight: 700; }
+        .meta-value { font-size: 15px; color: #1c1c1c; }
+        .summary { padding: 28px 44px 8px; }
+        .summary h2, .section h2 { font-size: 20px; color: #62430B; margin-bottom: 18px; }
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .summary-item { border: 1px solid #ece5d8; border-radius: 10px; padding: 12px 14px; background: #fffdf9; }
+        .summary-label { font-size: 12px; color: #765d35; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+        .summary-value { font-size: 14px; color: #1c1c1c; line-height: 1.5; }
+        .section { padding: 12px 44px 6px; page-break-inside: avoid; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; table-layout: fixed; }
+        thead th { background: #62430B; color: #ffffff; font-size: 13px; text-align: left; padding: 12px; }
+        tbody td { border: 1px solid #e7e2d8; padding: 10px 12px; vertical-align: top; font-size: 13px; line-height: 1.55; }
+        td.question { width: 42%; background: #faf7f1; color: #62430B; font-weight: 600; word-break: break-word; }
+        td.answer { width: 58%; color: #1c1c1c; word-break: break-word; }
+        td.empty { text-align: center; color: #6B6B6B; padding: 16px; }
+        .footer { margin-top: 20px; text-align: center; font-size: 11px; color: #777; padding-bottom: 30px; }
       </style>
     </head>
     <body>
       <div class="cover">
         <div class="logo-wrap">
-          ${
-            logoBase64
-              ? `<img src="${logoBase64}" class="logo-img" alt="Logo Diagnóstico 360" />`
-              : `<div class="logo-text">Diagnóstico de Risco Jurídico 360º</div>`
-          }
+          ${logoBase64
+            ? `<img src="${logoBase64}" class="logo-img" alt="Logo Diagnóstico 360" />`
+            : `<div class="logo-text">Diagnóstico de Risco Jurídico 360º</div>`}
         </div>
-
         <div class="title">Relatório de Respostas do Formulário</div>
         <div class="subtitle">
           Documento gerado automaticamente a partir das respostas enviadas pelo cliente
           para análise jurídica estratégica.
         </div>
-
         <div class="meta">
           <div class="meta-box">
             <div class="meta-label">E-mail de acesso</div>
@@ -305,16 +178,14 @@ export function buildPdfHtml(submission) {
           </div>
           <div class="meta-box">
             <div class="meta-label">Data de envio</div>
-            <div class="meta-value">${formatValue(submittedAt)}</div>
+            <div class="meta-value">${formatarDataBrasilia(submittedAt)}</div>
           </div>
         </div>
       </div>
 
       <div class="summary">
         <h2>Dados principais</h2>
-        <div class="summary-grid">
-          ${mainDataHtml}
-        </div>
+        <div class="summary-grid">${mainDataHtml}</div>
       </div>
 
       ${sectionsHtml}
