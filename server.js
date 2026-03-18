@@ -61,7 +61,17 @@ app.get('/admin/diagnosticos/:id', adminAuth, async (req, res) => {
     res.json({ ok: false, error: error.message });
   }
 });
-
+app.get('/setup-db', async (req, res) => {
+  const key = req.query.key;
+  if (key !== 'Eizzi360Admin@2026') return res.status(401).json({ ok: false });
+  try {
+    const { execSync } = await import('child_process');
+    execSync('npx prisma db push --accept-data-loss', { stdio: 'pipe' });
+    res.json({ ok: true, message: 'Banco atualizado!' });
+  } catch (error) {
+    res.json({ ok: false, error: error.message });
+  }
+});
 app.use('/api/submission', submissionRouter);
 app.use('/api/access', accessRouter);
 
