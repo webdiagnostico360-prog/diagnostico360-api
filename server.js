@@ -16,7 +16,7 @@ app.use(
       'https://eizzimelgarejo.com',
       'https://www.eizzimelgarejo.com',
     ],
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'DELETE'],
     credentials: false,
   })
 );
