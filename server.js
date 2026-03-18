@@ -62,6 +62,17 @@ app.get('/admin/diagnosticos/:id', adminAuth, async (req, res) => {
   }
 });
 
+// Rota admin — deletar diagnóstico
+app.delete('/admin/diagnosticos/:id', adminAuth, async (req, res) => {
+  try {
+    const { deletarDiagnostico } = await import('./services/dbService.js');
+    const result = await deletarDiagnostico(req.params.id);
+    res.json(result);
+  } catch (error) {
+    res.json({ ok: false, error: error.message });
+  }
+});
+
 app.use('/api/submission', submissionRouter);
 app.use('/api/access', accessRouter);
 
