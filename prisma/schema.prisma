@@ -29,8 +29,3 @@ model Diagnostico {
 
   @@map("diagnosticos")
 }
-```
-
-Commit → aguarda Railway → acessa:
-```
-https://diagnostico360-api-production.up.railway.app/setup-db?key=Eizzi360Admin@2026
